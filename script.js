@@ -64,7 +64,7 @@ get('projects/?limit=100')
 			return get('projects/' + project.key + '/repos')
 				.then(function(repos){
 					return Promise.all(repos.map(function(repo){
-						return get('projects/' + project.key + '/repos/' + repo.slug + '/pull-requests?limit=100&avatarSize=50');
+						return get('projects/' + project.key + '/repos/' + repo.slug + '/pull-requests?limit=100&avatarSize=60');
 					})).then(flatten);
 				});
 		})).then(flatten);
@@ -86,30 +86,34 @@ get('projects/?limit=100')
 				'body { padding: 40px; }' +
 				'ul { list-style-type: none; padding: 0; }' +
 				'.pr { margin: 20px -5px; padding: 5px; }' +
+				'.pr.hasTasks .authorAvatar, .pr.isNotApproved.hasNoTasks .reviewers {' +
+					'display: inline-block;' +
+					'border-bottom: 3px solid orange;' +
+				'}' +
 				'.isApproved { background-color: hsl(120, 28%, 90%); }' +
-				'.hasTasks { background-color: hsl(200, 28%, 90%); }' +
 				'img { vertical-align: middle; margin: 0; }' +
 				'.authorAvatar { float:left; clear: left; margin-right: 10px; }' +
 				'.title { display: block; }' +
 				'.taskCount { margin: 0 10px; }' +
-				'.pr:not(.hasTasks) .taskCount { opacity: 0.5; }' +
-				'[data-approved] { border-bottom: 3px solid transparent; }' +
-				'[data-approved="true"] { border-color: green; }' +
+				'.pr.hasNoTasks .taskCount { display: none; }' +
+				'[data-approved="true"] { border-bottom: 3px solid green; }' +
 			'</style>' +
 			'<p>Pull requests that need attention are at the top.</p>' +
 			'<ul>' +
 			prs.map(function(pr){
-				return '<li class="pr ' +
-						(isApproved(pr) ? 'isApproved' : '') +
-						(hasTasks(pr) ? 'hasTasks' : '') +
+				return '<li class="pr' +
+						(isApproved(pr) ? ' isApproved' : ' isNotApproved') +
+						(hasTasks(pr) ? ' hasTasks' : ' hasNoTasks') +
 					' ">' +
-					'<img class=authorAvatar width=50 src="' + pr.author.user.avatarUrl + '">' +
+					'<img class=authorAvatar width=60 src="' + pr.author.user.avatarUrl + '">' +
 					'<a href="' + pr.links.self[0].href + '" class=title>' + prRepo(pr) + ' / ' + pr.title + '</a>' +
-					pr.reviewers.map(function(reviewer){
-						return '<img width=30 src="' + reviewer.user.avatarUrl + '" data-approved="' + String(reviewer.approved) + '">';
-					}).join('') +
+					'<span class=reviewers>' +
+						pr.reviewers.map(function(reviewer){
+							return '<img width=40 src="' + reviewer.user.avatarUrl + '" data-approved="' + String(reviewer.approved) + '">';
+						}).join('') +
+					'</span>' +
 					'<span class=taskCount>' +
-						pluralize(taskCount(pr), '', '1 task', taskCount(pr) + ' tasks') +
+						pluralize(taskCount(pr), 'No tasks', '1 task', taskCount(pr) + ' tasks') +
 					'</span>' +
 				'</li>';
 			}).join('') +
